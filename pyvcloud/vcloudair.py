@@ -130,6 +130,17 @@ class VCA(object):
 
         """
 
+         # Move standalone VCA verification to top to bypass bad HTTP code response from Connectis VCloudAir infrastructure
+        url = self.host + '/api/versions'
+        response = Http.get(url, verify=self.verify, logger=self.logger)
+        if response.status_code == requests.codes.ok:
+            try:
+                supported_versions = versionsType.parseString(
+                    response.content, True)
+                return VCA.VCA_SERVICE_TYPE_STANDALONE
+            except:
+                pass
+
         url = self.host + '/api/iam/login'
         headers = {}
         headers["Accept"] = "application/json;version=" + '5.7'
@@ -144,15 +155,7 @@ class VCA(object):
                              verify=self.verify, logger=self.logger)
         if response.status_code == requests.codes.unauthorized:
             return VCA.VCA_SERVICE_TYPE_VCHS
-        url = self.host + '/api/versions'
-        response = Http.get(url, verify=self.verify, logger=self.logger)
-        if response.status_code == requests.codes.ok:
-            try:
-                supported_versions = versionsType.parseString(
-                    response.content, True)
-                return VCA.VCA_SERVICE_TYPE_STANDALONE
-            except:
-                pass
+
         return VCA.VCA_SERVICE_TYPE_UNKNOWN
 
     def _get_services(self):
